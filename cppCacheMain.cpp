@@ -1,6 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <map>
+#include <vector>
+
+#define writeAllocate 0
+#define noWriteAllocate 1
+#define writeThrough 0
+#define writeBack 1
+#define lru 0
+#define fifo 1
+
 using namespace std;
 
 
@@ -48,4 +58,67 @@ int main(int argc, char** argv) {
 
 }
 
+class cache {
+	
+	//data fields
+	map<string, vector<string>> cacheData;
+	int sets;
+	int blocksPerSet;
+	int bytesPerBlock;
 
+	//settings fields
+	int toMemoryProtocol;
+	int toCacheProtocol;
+	int evictionProtocol;
+	
+	//output fields
+	int loads;
+	int stores;
+	int loadHits;
+	int loadMisses;
+	int storeHits;
+	int storeMisses;
+	int cycles;	
+
+	//functions
+	public:
+	cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol);
+	void perform (string storeOrLoad, string index, string tag);
+	void write (string index, string tag);
+	void read (string index, string tag);
+	void eviction (vector<string> block);
+
+	int getLoads ();
+	int getStores ();
+	int getloadHits ();
+	int getloadMisses ();
+	int getstoreHits ();
+	int getStoreMisses ();
+	int getCycles ();
+	
+};
+
+cache::cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol) {
+
+	//data fields
+	sets = _sets;
+	blocksPerSet = _blocksPerSet;
+	bytesPerBlock = _bytesPerBlock;
+	
+	//settings fields
+	toMemoryProtocol = _toMemoryProtocol;
+	toCacheProtocol = _toCacheProtocol;
+	evictionProtocol = _evicitionProtocol;
+
+	//output fields
+	loads = 0;
+	stores = 0;
+	loadHits = 0;
+	loadMisses = 0;
+	storeHits = 0;
+	storeMisses = 0;
+	cycles = 0;
+}
+
+void cache::perform (string storeOrLoad, string index, string tag) {
+}

@@ -37,7 +37,7 @@ string hex_char_to_bin(char c) {
 }
 
 class cache {
-
+	public:
         //data fields
         map<string, vector<string>> cacheData;
         int sets;
@@ -59,13 +59,12 @@ class cache {
         int cycles;
 
         //functions
-        public:
         cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol);
         void perform (string storeOrLoad, string index, string tag);
         void write (string index, string tag);
         void read (string index, string tag);
         void insert (string index, string tag);
-        bool containsElement(vector<string> value, string element);
+        bool containsElement(string index, string tag);
 
         void printResults ();
 };
@@ -109,7 +108,6 @@ int main(int argc, char** argv) {
 
 	//allocate all relevant data from trace file
 	while (cin >> word) {
-		cout << word << endl;
 		if (indexVar ==0 || indexVar == 1) {
 			data[indexVar].push_back(word);
 		}
@@ -203,7 +201,7 @@ void cache::write (string index, string tag) {
 	
 	stores++;
 	
-	if(containsElement(set, tag)) {
+	if(containsElement(index, tag)) {
 		storeHits++;
 
 		cycles += (bytesPerBlock / 4);
@@ -238,23 +236,23 @@ void cache::write (string index, string tag) {
                         cycles += 100*(bytesPerBlock / 4);
                 }
 	}
+
+	cacheData[index] = set;
 }
 
 void cache::read (string index, string tag) {
-	vector<string> set = cacheData[index];
-
 	loads++;
 
-	if(containsElement(set, tag)) {
+	if(containsElement(index, tag)) {
 		loadHits++;
 
 		cycles += (bytesPerBlock / 4);
 
 		if (evictionProtocol == lru) {
-                        for (int i = 0; i < set.size(); i++) {
-                                if (set[i].compare(tag) == 0) {
-                                        set.erase(set.begin());
-                                        set.push_back(tag);
+                        for (int i = 0; i < cacheData[index].size(); i++) {
+                                if (cacheData[index][i].compare(tag) == 0) {
+                                        cacheData[index].erase(cacheData[index].begin()+i);
+                                        cacheData[index].push_back(tag);
                                 }
                         }
                 }
@@ -268,20 +266,20 @@ void cache::read (string index, string tag) {
 		insert(index, tag);		
 	}
 
-
 }
 
 void cache::insert (string index, string tag) {
-	vector<string> set = cacheData[index];
-	if (set.size() == blocksPerSet) {
-		set.erase(set.begin());
+	if (cacheData[index].size() == blocksPerSet) {
+		cacheData[index].erase(cacheData[index].begin());
 	}
-	set.push_back(tag);
+	cacheData[index].push_back(tag);
 }
 
-bool cache::containsElement(vector<string> value, string element) {
-	for (int i = 0; i < value.size(); i++) {
-		if (value[0].compare(element) == 0) {
+bool cache::containsElement(string index, string tag) {
+	vector<string> set = cacheData[index];
+
+	for (int i = 0; i < set.size(); i++) {
+		if (set.at(i).compare(tag) == 0) {
 			return 1;
 		}
 	}

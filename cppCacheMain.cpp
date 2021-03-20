@@ -36,6 +36,61 @@ string hex_char_to_bin(char c) {
         }
 }
 
+class cache {
+
+        //data fields
+        map<string, vector<string>> cacheData;
+        int sets;
+        int blocksPerSet;
+        int bytesPerBlock;
+
+        //settings fields
+        int toMemoryProtocol;
+        int toCacheProtocol;
+        int evictionProtocol;
+
+        //output fields
+        int loads;
+        int stores;
+        int loadHits;
+        int loadMisses;
+        int storeHits;
+        int storeMisses;
+        int cycles;
+
+        //functions
+        public:
+        cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol);
+        void perform (string storeOrLoad, string index, string tag);
+        void write (string index, string tag);
+        void read (string index, string tag);
+        void insert (string index, string tag);
+        bool containsElement(vector<string> value, string element);
+
+        void printResults ();
+};
+
+cache::cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol) {
+
+        //data fields
+        sets = _sets;
+        blocksPerSet = _blocksPerSet;
+        bytesPerBlock = _bytesPerBlock;
+
+        //settings fields
+        toMemoryProtocol = _toMemoryProtocol;
+        toCacheProtocol = _toCacheProtocol;
+        evictionProtocol = _evicitionProtocol;
+
+        //output fields
+        loads = 0;
+        stores = 0;
+        loadHits = 0;
+        loadMisses = 0;
+        storeHits = 0;
+        storeMisses = 0;
+        cycles = 0;
+}
 
 
 //argv[1] is amount of sets
@@ -52,13 +107,7 @@ int main(int argc, char** argv) {
 	int indexVar = 0;
 	string word;
 
-	//setting up file
-	cout << argv[5];
-	cout << argv[6];
-	cout << argv[8];
-
 	//allocate all relevant data from trace file
-	cout << "before trace";
 	while (cin >> word) {
 		cout << word << endl;
 		if (indexVar ==0 || indexVar == 1) {
@@ -130,79 +179,13 @@ int main(int argc, char** argv) {
 		data[4].push_back(binaryRepresentation.substr(tagSize-1, indexSize));
 	}
 
-	//testing
-	cout << "before end";
-	for (int i = 0; i < data[0].size(); i++) {
-		cout << "loop";
-		cout << "Load or Store: " << data[0].at(i) << "\n";
-		cout << "Hexvalue: " << data[1].at(i) << "\n";
-		cout << "Binary Representation: " << data[2].at(i) << "\n";
-		cout << "Tag: " << data[3].at(i) << "\n";
-		cout << "Index: " << data[4].at(i) << "\n\n";
-	}
-}
+	cache mainCache(sets, blocks, bytes, toMemoryProtocol, toCacheProtocol, evictionProtocol);
 
-class cache {
-	
-	//data fields
-	map<string, vector<string>> cacheData;
-	int sets;
-	int blocksPerSet;
-	int bytesPerBlock;
+	for (int i = 0; i < data[1].size(); i++) {
+                mainCache.perform(data[0].at(i), data[4].at(i), data[3].at(i));
+        }
 
-	//settings fields
-	int toMemoryProtocol;
-	int toCacheProtocol;
-	int evictionProtocol;
-	
-	//output fields
-	int loads;
-	int stores;
-	int loadHits;
-	int loadMisses;
-	int storeHits;
-	int storeMisses;
-	int cycles;	
-
-	//functions
-	public:
-	cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol);
-	void perform (string storeOrLoad, string index, string tag);
-	void write (string index, string tag);
-	void read (string index, string tag);
-	void insert (string index, string tag);
-	bool containsElement(vector<string> value, string element);
-
-	int getLoads ();
-	int getStores ();
-	int getloadHits ();
-	int getloadMisses ();
-	int getstoreHits ();
-	int getStoreMisses ();
-	int getCycles ();
-	
-};
-
-cache::cache (int _sets, int _blocksPerSet, int _bytesPerBlock, int _toMemoryProtocol, int _toCacheProtocol, int _evicitionProtocol) {
-
-	//data fields
-	sets = _sets;
-	blocksPerSet = _blocksPerSet;
-	bytesPerBlock = _bytesPerBlock;
-	
-	//settings fields
-	toMemoryProtocol = _toMemoryProtocol;
-	toCacheProtocol = _toCacheProtocol;
-	evictionProtocol = _evicitionProtocol;
-
-	//output fields
-	loads = 0;
-	stores = 0;
-	loadHits = 0;
-	loadMisses = 0;
-	storeHits = 0;
-	storeMisses = 0;
-	cycles = 0;
+	mainCache.printResults();
 }
 
 void cache::perform (string storeOrLoad, string index, string tag) {
@@ -304,4 +287,16 @@ bool cache::containsElement(vector<string> value, string element) {
 	}
 
 	return 0;
+}
+
+void cache::printResults() {
+
+	cout << "Total loads: " << loads << "\n";
+        cout << "Total stores: " << stores << "\n";
+        cout << "Load hits: " << loadHits << "\n";
+        cout << "Load misses: " << loadMisses << "\n";
+        cout << "Store hits: " << storeHits << "\n";
+        cout << "Store misses: " << storeMisses << "\n";
+        cout << "Total cycles: " << cycles << "\n";
+
 }

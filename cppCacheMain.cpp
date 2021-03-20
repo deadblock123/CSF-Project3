@@ -53,16 +53,14 @@ int main(int argc, char** argv) {
 	string word;
 
 	//setting up file
-	fstream traceFile;
-        traceFile.open(argv[8]);
 	cout << argv[5];
 	cout << argv[6];
 	cout << argv[8];
 
 	//allocate all relevant data from trace file
 	cout << "before trace";
-	while (traceFile >> word) {
-		cout << "after trace";
+	while (cin >> word) {
+		cout << word << endl;
 		if (indexVar ==0 || indexVar == 1) {
 			data[indexVar].push_back(word);
 		}

@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
 	if (str1.compare(argv[4]) == 0) {
 		toCacheProtocol = writeAllocate;
 	}
-	else if (str2.compare(argv[4])) { 
+	else if (str2.compare(argv[4]) == 0) { 
 		toCacheProtocol = noWriteAllocate;
 	}
 
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 	if (str3.compare(argv[5]) == 0) {
                 toMemoryProtocol = writeThrough;
         }
-        else if (str4.compare(argv[5])) {
+        else if (str4.compare(argv[5]) == 0) {
                 toMemoryProtocol = writeBack;
         }
 	
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
 	if (str5.compare(argv[6]) == 0) {
                 evictionProtocol = fifo;
         }
-        else if (str6.compare(argv[6])) {
+        else if (str6.compare(argv[6]) == 0) {
                 evictionProtocol = lru;
         }
 
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
 		}
 		data[2].push_back(binaryRepresentation);
 		data[3].push_back(binaryRepresentation.substr(0, tagSize));
-		data[4].push_back(binaryRepresentation.substr(tagSize-1, indexSize));
+		data[4].push_back(binaryRepresentation.substr(tagSize, indexSize));
 	}
 
 	cache mainCache(sets, blocks, bytes, toMemoryProtocol, toCacheProtocol, evictionProtocol);
@@ -219,7 +219,6 @@ void cache::write (string index, string tag) {
 		storeMisses++;
 		if (toMemoryProtocol == writeAllocate) {
                         //loads block into cache
-                        cycles += (bytesPerBlock / 4) + 100*(bytesPerBlock / 4);
 			insert(index, tag);
 
                         if (toCacheProtocol == writeThrough) {
@@ -251,7 +250,7 @@ void cache::read (string index, string tag) {
 		if (evictionProtocol == lru) {
                         for (int i = 0; i < cacheData[index].size(); i++) {
                                 if (cacheData[index][i].compare(tag) == 0) {
-                                        cacheData[index].erase(cacheData[index].begin()+i);
+                                        cacheData[index].erase(cacheData[index].begin() + i);
                                         cacheData[index].push_back(tag);
                                 }
                         }

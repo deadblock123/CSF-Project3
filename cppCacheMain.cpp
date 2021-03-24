@@ -197,8 +197,6 @@ void cache::perform (string storeOrLoad, string index, string tag) {
 }
 
 void cache::write (string index, string tag) {
-	vector<string> set = cacheData[index];
-	
 	stores++;
 	
 	if(containsElement(index, tag)) {
@@ -207,10 +205,11 @@ void cache::write (string index, string tag) {
 		cycles += (bytesPerBlock / 4);
 
 		if (evictionProtocol == lru) {
-			for (int i = 0; i < set.size(); i++) {
-				if (set[i].compare(tag) == 0) {
-					set.erase(set.begin());
-					set.push_back(tag);
+			for (int i = 0; i < cacheData[index].size(); i++) {
+				if (cacheData[index][i].compare(tag) == 0) {
+					cacheData[index].erase(cacheData[index].begin()+i);
+					cacheData[index].push_back(tag);
+					//tag is scanned twice?
 				}
 			}
 		}
@@ -224,7 +223,7 @@ void cache::write (string index, string tag) {
                         if (toCacheProtocol == writeThrough) {
                                 //has to write to cache and to main memory
                                 cycles += (bytesPerBlock / 4) + 100*(bytesPerBlock / 4);
-                        }
+			}
                         else {
                                 //implies writeBack which means that we only write to the cache
                                 cycles += (bytesPerBlock / 4);
@@ -235,8 +234,6 @@ void cache::write (string index, string tag) {
                         cycles += 100*(bytesPerBlock / 4);
                 }
 	}
-
-	cacheData[index] = set;
 }
 
 void cache::read (string index, string tag) {
@@ -252,6 +249,7 @@ void cache::read (string index, string tag) {
                                 if (cacheData[index][i].compare(tag) == 0) {
                                         cacheData[index].erase(cacheData[index].begin() + i);
                                         cacheData[index].push_back(tag);
+					//tag is scanned twice?
                                 }
                         }
                 }

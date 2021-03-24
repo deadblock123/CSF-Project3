@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
 		}
 		data[2].push_back(binaryRepresentation);
 		data[3].push_back(binaryRepresentation.substr(0, tagSize));
-		data[4].push_back(binaryRepresentation.substr(tagSize-1, indexSize));
+		data[4].push_back(binaryRepresentation.substr(tagSize, indexSize));
 	}
 
 	cache mainCache(sets, blocks, bytes, toMemoryProtocol, toCacheProtocol, evictionProtocol);

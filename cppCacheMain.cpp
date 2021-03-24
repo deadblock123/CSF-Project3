@@ -209,18 +209,18 @@ void cache::write (string index, string tag) {
 				if (cacheData[index][i].compare(tag) == 0) {
 					cacheData[index].erase(cacheData[index].begin()+i);
 					cacheData[index].push_back(tag);
-					//tag is scanned twice?
+					break;
 				}
 			}
 		}
 	}
 	else {
 		storeMisses++;
-		if (toMemoryProtocol == writeAllocate) {
+		if (toCacheProtocol == writeAllocate) {
                         //loads block into cache
 			insert(index, tag);
 
-                        if (toCacheProtocol == writeThrough) {
+                        if (toMemoryProtocol == writeThrough) {
                                 //has to write to cache and to main memory
                                 cycles += (bytesPerBlock / 4) + 100*(bytesPerBlock / 4);
 			}
@@ -249,7 +249,7 @@ void cache::read (string index, string tag) {
                                 if (cacheData[index][i].compare(tag) == 0) {
                                         cacheData[index].erase(cacheData[index].begin() + i);
                                         cacheData[index].push_back(tag);
-					//tag is scanned twice?
+					break;
                                 }
                         }
                 }

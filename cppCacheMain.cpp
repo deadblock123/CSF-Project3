@@ -233,23 +233,11 @@ void cache::write (string index, string tag) {
                         //loads block into cache
 			insert(index, tag);
 			//load from main memory
-			cycles += 100;
+			cycles += 100*(bytesPerBlock / 4);
 			//write to main memory
 			cycles += 100;
 			//write to cache
 			cycles += 1;
-
-                        //if (toMemoryProtocol == writeThrough) {
-                        //        //writes to main memory
-                        //        cycles += 100*(bytesPerBlock / 4);
-			//	//moves from main to cache
-                        //        cycles += 100*(bytesPerBlock / 4);
-			//}
-                        //else {
-                        //        //writes to cache only
-                        //        cycles += 1*(bytesPerBlock / 4);
-			//	markBlock(index, tag);
-                        //}
                 }
                 else {
                         //writes to main memory only

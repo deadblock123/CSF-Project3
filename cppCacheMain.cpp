@@ -40,6 +40,7 @@ class cache {
 	public:
         //data fields
         map<string, vector<string>> cacheData;
+	map<string, vector<string>> dirtyBlocks;
         int sets;
         int blocksPerSet;
         int bytesPerBlock;
@@ -64,6 +65,8 @@ class cache {
         void write (string index, string tag);
         void read (string index, string tag);
         void insert (string index, string tag);
+	void markBlock (string index, string tag);
+	bool isDirty(string index, string tag);
         bool containsElement(string index, string tag);
 
         void printResults ();
@@ -126,12 +129,12 @@ int main(int argc, char** argv) {
 	int bytes = strtol(argv[3], &p, 10);
 	
 	int offsetSize = 0;
-        for (int i = bytes; i > 1; i /= 2) {
+        for (unsigned i = bytes; i > 1; i /= 2) {
                 offsetSize++;
         }
 
         int indexSize = 0;
-        for (int i = sets; i > 1; i /= 2) {
+        for (unsigned i = sets; i > 1; i /= 2) {
                 indexSize++;
         }
 
@@ -167,9 +170,9 @@ int main(int argc, char** argv) {
                 evictionProtocol = lru;
         }
 
-	for (int i = 0; i < data[1].size(); i++) {
+	for (unsigned i = 0; i < data[1].size(); i++) {
 		string binaryRepresentation = "";
-		for (int j = 2; j < data[1].at(i).length(); j++) {
+		for (unsigned j = 2; j < data[1].at(i).length(); j++) {
 			binaryRepresentation.append(hex_char_to_bin(data[1].at(i).at(j)));
 		}
 		data[2].push_back(binaryRepresentation);
@@ -179,7 +182,7 @@ int main(int argc, char** argv) {
 
 	cache mainCache(sets, blocks, bytes, toMemoryProtocol, toCacheProtocol, evictionProtocol);
 
-	for (int i = 0; i < data[1].size(); i++) {
+	for (unsigned i = 0; i < data[1].size(); i++) {
                 mainCache.perform(data[0].at(i), data[4].at(i), data[3].at(i));
         }
 
@@ -201,11 +204,21 @@ void cache::write (string index, string tag) {
 	
 	if(containsElement(index, tag)) {
 		storeHits++;
+		//write to cache
+		cycles += 1*(bytesPerBlock / 4);
+		
+		if (toMemoryProtocol == writeThrough) {
+			//write to memory
+			cycles += 100*(bytesPerBlock / 4);
+		} 
 
-		cycles += (bytesPerBlock / 4);
+		else {
+			//mark block as dirty
+			markBlock(index, tag);
+		}
 
 		if (evictionProtocol == lru) {
-			for (int i = 0; i < cacheData[index].size(); i++) {
+			for (unsigned i = 0; i < cacheData[index].size(); i++) {
 				if (cacheData[index][i].compare(tag) == 0) {
 					cacheData[index].erase(cacheData[index].begin()+i);
 					cacheData[index].push_back(tag);
@@ -219,18 +232,27 @@ void cache::write (string index, string tag) {
 		if (toCacheProtocol == writeAllocate) {
                         //loads block into cache
 			insert(index, tag);
+			//load from main memory
+			cycles += 100*(bytesPerBlock / 4);
+			//write to main memory
+			cycles += 100*(bytesPerBlock / 4);
+			//write to cache
+			cycles += 1*(bytesPerBlock / 4);
 
-                        if (toMemoryProtocol == writeThrough) {
-                                //has to write to cache and to main memory
-                                cycles += (bytesPerBlock / 4) + 100*(bytesPerBlock / 4);
-			}
-                        else {
-                                //implies writeBack which means that we only write to the cache
-                                cycles += (bytesPerBlock / 4);
-                        }
+                        //if (toMemoryProtocol == writeThrough) {
+                        //        //writes to main memory
+                        //        cycles += 100*(bytesPerBlock / 4);
+			//	//moves from main to cache
+                        //        cycles += 100*(bytesPerBlock / 4);
+			//}
+                        //else {
+                        //        //writes to cache only
+                        //        cycles += 1*(bytesPerBlock / 4);
+			//	markBlock(index, tag);
+                        //}
                 }
                 else {
-                        //has to write to main memory
+                        //writes to main memory only
                         cycles += 100*(bytesPerBlock / 4);
                 }
 	}
@@ -242,10 +264,11 @@ void cache::read (string index, string tag) {
 	if(containsElement(index, tag)) {
 		loadHits++;
 
-		cycles += (bytesPerBlock / 4);
+		//reads from cache only
+		cycles += 1*(bytesPerBlock / 4);
 
 		if (evictionProtocol == lru) {
-                        for (int i = 0; i < cacheData[index].size(); i++) {
+                        for (unsigned i = 0; i < cacheData[index].size(); i++) {
                                 if (cacheData[index][i].compare(tag) == 0) {
                                         cacheData[index].erase(cacheData[index].begin() + i);
                                         cacheData[index].push_back(tag);
@@ -258,7 +281,10 @@ void cache::read (string index, string tag) {
 	else {
 		loadMisses++;
 
-		cycles += (bytesPerBlock / 4) + 100*(bytesPerBlock / 4);
+		//loads main memory into cache
+		cycles += 100*(bytesPerBlock / 4);
+		//loads cache into local memory
+		cycles += 1*(bytesPerBlock / 4);
 
 		insert(index, tag);		
 	}
@@ -267,15 +293,35 @@ void cache::read (string index, string tag) {
 
 void cache::insert (string index, string tag) {
 	if (cacheData[index].size() == blocksPerSet) {
+		if (isDirty(index, tag)) {
+		        //loads cache into memory before eviction	
+			cycles += 100*(bytesPerBlock / 4);	
+		}
 		cacheData[index].erase(cacheData[index].begin());
 	}
 	cacheData[index].push_back(tag);
 }
 
+void cache::markBlock (string index, string tag) {
+        dirtyBlocks[index].push_back(tag);
+}
+
+bool cache::isDirty(string index, string tag) {
+        for (unsigned i = 0; i < dirtyBlocks[index].size(); i++) {
+                if (dirtyBlocks[index].at(i).compare(tag) == 0) {
+                        dirtyBlocks[index].erase(dirtyBlocks[index].begin()+i);
+			return 1;
+                }
+        }
+
+        return 0;
+}
+
+
 bool cache::containsElement(string index, string tag) {
 	vector<string> set = cacheData[index];
 
-	for (int i = 0; i < set.size(); i++) {
+	for (unsigned i = 0; i < set.size(); i++) {
 		if (set.at(i).compare(tag) == 0) {
 			return 1;
 		}

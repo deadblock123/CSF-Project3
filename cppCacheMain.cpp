@@ -205,11 +205,11 @@ void cache::write (string index, string tag) {
 	if(containsElement(index, tag)) {
 		storeHits++;
 		//write to cache
-		cycles += 1*(bytesPerBlock / 4);
+		cycles += 1;
 		
 		if (toMemoryProtocol == writeThrough) {
 			//write to memory
-			cycles += 100*(bytesPerBlock / 4);
+			cycles += 100;
 		} 
 
 		else {
@@ -233,11 +233,11 @@ void cache::write (string index, string tag) {
                         //loads block into cache
 			insert(index, tag);
 			//load from main memory
-			cycles += 100*(bytesPerBlock / 4);
+			cycles += 100;
 			//write to main memory
-			cycles += 100*(bytesPerBlock / 4);
+			cycles += 100;
 			//write to cache
-			cycles += 1*(bytesPerBlock / 4);
+			cycles += 1;
 
                         //if (toMemoryProtocol == writeThrough) {
                         //        //writes to main memory
@@ -253,7 +253,7 @@ void cache::write (string index, string tag) {
                 }
                 else {
                         //writes to main memory only
-                        cycles += 100*(bytesPerBlock / 4);
+                        cycles += 100;
                 }
 	}
 }
